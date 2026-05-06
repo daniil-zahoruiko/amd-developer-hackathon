@@ -1,0 +1,3 @@
+[submodule "tribev2"]
+	path = tribev2
+	url = org-16943930@github.com:facebookresearch/tribev2.git
