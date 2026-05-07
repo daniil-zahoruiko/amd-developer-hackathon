@@ -105,14 +105,9 @@ thinc==8.3.13
 threadpoolctl==3.6.0
 tifffile==2026.5.2
 tokenizers==0.22.2
-torch==2.13.0.dev20260428+rocm7.2
-torchaudio==2.11.0.dev20260506+rocm7.2
 torchmetrics==1.9.0
-torchvision==0.27.0.dev20260506+rocm7.2
 tqdm==4.67.3
 transformers==5.8.0
--e git+ssh://org-16943930@github.com/facebookresearch/tribev2.git@72399081ed3f1040c4d996cefb2864a4c46f5b8e#egg=tribev2&subdirectory=../../tribev2
-triton-rocm==3.7.0+git88b227e2
 typer==0.23.1
 typing-inspection==0.4.2
 typing_extensions==4.15.0
