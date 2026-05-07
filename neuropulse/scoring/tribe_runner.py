@@ -1,5 +1,6 @@
 import numpy as np
 import time
+from tribev2 import TribeModel
 
 
 class TRIBERunner:
@@ -13,10 +14,8 @@ class TRIBERunner:
             self.model.eval()
         Set self.ready = True when loaded successfully.
         """
-        # TODO: replace with real model loading
         self.config = config
-        self.model = None
-        self.ready = False
+        self.model = TribeModel.from_pretrained("facebook/tribev2", cache_folder="./cache")
 
     def run(self, preprocessed: dict) -> np.ndarray:
         """
