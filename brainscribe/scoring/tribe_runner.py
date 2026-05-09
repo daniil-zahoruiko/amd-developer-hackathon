@@ -7,15 +7,6 @@ from pathlib import Path
 
 class TRIBERunner:
     def __init__(self, config):
-        """
-        TODO: Load TRIBE v2 from config.TRIBE_MODEL_PATH onto config.DEVICE.
-        Example:
-            from tribev2 import TribeV2Model
-            self.model = TribeV2Model.from_pretrained(config.TRIBE_MODEL_PATH)
-            self.model.to(config.DEVICE)
-            self.model.eval()
-        Set self.ready = True when loaded successfully.
-        """
         self.config = config
         self.model = TribeModel.from_pretrained("facebook/tribev2", cache_folder="./cache")
 
@@ -36,11 +27,6 @@ class TRIBERunner:
         df = self.model.get_events_dataframe(audio_path=audio_path)
         preds, segments = self.model.predict(events=df)
         return preds, segments, df
-
-    def run_video(self, video_path: str):
-        df = self.model.get_events_dataframe(video_path=video_path)
-        preds, segments = self.model.predict(events=df)
-        return preds, segments
 
     def run(self, preprocessed: dict) -> np.ndarray:
         """
