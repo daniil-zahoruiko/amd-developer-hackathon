@@ -114,19 +114,20 @@ def handle_score(current_text: str, history: list[dict]):
         raise gr.Error(str(e))
 
 
-def handle_video_score(video_file):
+def handle_audio_score(audio_file):
     yield (
         gr.update(), gr.update(),
         gr.update(value="⏳ Analyzing…", interactive=False),
     )
     try:
-        if video_file is None:
-            raise gr.Error("Please upload a video first.")
-        path = video_file if isinstance(video_file, str) else video_file.name
-        preds, segments = tribe_runner.run_video(path)
-        scores = roi_extractor.extract_video_scores(preds)
+        if audio_file is None:
+            raise gr.Error("Please upload an audio file first.")
+        path = audio_file if isinstance(audio_file, str) else audio_file.name
+        preds, segments, df = tribe_runner.run_audio(path)
+        seq_ids, scores = roi_extractor.extract_segment_scores(preds, segments)
+        seq_to_text = _build_seq_to_text(df)
+        fig = build_timeline_chart((seq_ids, scores, seq_to_text))
         mean_score = float(scores.mean())
-        fig = build_video_chart(scores, segments)
         yield (
             fig, f"{mean_score:.1f}",
             gr.update(value="Evaluate", interactive=True),
@@ -287,31 +288,31 @@ with gr.Blocks(title=config.APP_TITLE) as demo:
                 ],
             )
 
-        # ── Video tab ─────────────────────────────────────────────────────────
-        with gr.Tab("Video"):
-            gr.Markdown("Upload a video to score brain engagement using visual, language, attention, and default-mode network signals.")
+        # ── Audio tab ─────────────────────────────────────────────────────────
+        with gr.Tab("Audio"):
+            gr.Markdown("Upload an audio track to score brain engagement using language, attention, and default-mode network signals.")
 
-            video_input = gr.File(
-                label="Upload video",
-                file_types=[".mp4", ".avi", ".mov", ".mkv", ".webm"],
+            audio_input = gr.File(
+                label="Upload audio",
+                file_types=[".wav", ".mp3", ".flac", ".ogg"],
                 type="filepath",
             )
-            video_score_btn = gr.Button("Evaluate", variant="primary")
+            audio_score_btn = gr.Button("Evaluate", variant="primary")
 
-            with gr.Row() as video_results_row:
+            with gr.Row() as audio_results_row:
                 with gr.Column(scale=1):
-                    video_mean = gr.Textbox(
+                    audio_mean = gr.Textbox(
                         label="Mean engagement score (0–100)",
                         interactive=False,
                         placeholder="—",
                     )
                 with gr.Column(scale=4):
-                    video_plot = gr.Plot(label="Engagement over time")
+                    audio_plot = gr.Plot(label="Engagement over time")
 
-            video_score_btn.click(
-                fn=handle_video_score,
-                inputs=[video_input],
-                outputs=[video_plot, video_mean, video_score_btn],
+            audio_score_btn.click(
+                fn=handle_audio_score,
+                inputs=[audio_input],
+                outputs=[audio_plot, audio_mean, audio_score_btn],
             )
 
 
