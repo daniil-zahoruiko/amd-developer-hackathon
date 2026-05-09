@@ -67,9 +67,10 @@ class Optimizer:
         params: "TextParams",
         tribe_runner: "TRIBERunner",
         roi_extractor: "ROIExtractor",
-    ) -> tuple[str, tuple]:
+    ) -> tuple[str, tuple, float]:
         preds, segments, df = tribe_runner.run_text(text)
-        seq_ids, scores = roi_extractor.extract_segment_scores(preds, segments)
+        seq_ids, scores  = roi_extractor.extract_segment_scores(preds, segments)
+        _, abs_scores    = roi_extractor.extract_absolute_score(preds, segments)
         words = df[df["type"] == "Word"]
         def _seq_text(group):
             lst = list(group["text"])
@@ -82,4 +83,4 @@ class Optimizer:
         instruction = self.suggest_refinement_instruction(seq_ids, scores, seq_to_sentence)
         print(f"Refining with {instruction}")
         refined_text = self.generator.refine(text, params, instruction, SYSTEM_PROMPT)
-        return refined_text, (seq_ids, scores, seq_to_sentence)
+        return refined_text, (seq_ids, scores, seq_to_sentence), float(abs_scores.mean())

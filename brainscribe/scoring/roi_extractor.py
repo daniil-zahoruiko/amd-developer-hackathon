@@ -47,56 +47,17 @@ class ROIExtractor:
             'G_and_S_occipital_inf',
         ])
 
-    def extract_video_scores(self, preds: np.ndarray) -> np.ndarray:
-        """Score video predictions (n_timesteps, 20484) → engagement per second."""
-        def zscore(x: np.ndarray) -> np.ndarray:
-            std = x.std()
-            if std < 1e-8:
-                return np.zeros_like(x)
-            return (x - x.mean()) / std
+    def _aggregate_by_sequence(self, preds, segments):
+        """Average preds over segments that share a sequence_id (collapses repetitions).
 
-        rois = {
-            "ventral":  preds[:, self.ventral].mean(axis=1),
-            "language": preds[:, self.LANGUAGE].mean(axis=1),
-            "DAN":      preds[:, self.DAN].mean(axis=1),
-            "DMN":      preds[:, self.DMN].mean(axis=1),
-            "ACC":      preds[:, self.ACC].mean(axis=1),
-        }
-
-        raw_composite = (
-              0.25 * zscore(rois["ventral"])
-            + 0.20 * zscore(rois["language"])
-            + 0.25 * zscore(rois["DAN"])
-            - 0.20 * zscore(rois["DMN"])
-            + 0.10 * zscore(rois["ACC"])
-        )
-        return 100.0 / (1.0 + np.exp(-raw_composite))
-
-    def extract_segment_scores(self, preds, segments):
-        def zscore(x: np.ndarray) -> np.ndarray:
-            """
-            Standardize to mean=0, std=1 across the array.
-            Makes ROI weights meaningful by equalizing scales before combining —
-            otherwise whichever ROI happens to have the largest dynamic range
-            dominates the composite regardless of its assigned weight.
-            Falls back to returning zeros if std is ~0 (flat signal).
-            """
-            std = x.std()
-            if std < 1e-8:
-                return np.zeros_like(x)
-            return (x - x.mean()) / std
-
-
-        # Step 1: For each preds row, find the dominant sequence_id
-        # (the most recently started word in that segment = "current" sentence)
+        Returns (seq_ids_arr, preds_by_seq) where preds_by_seq has shape (n_seqs, n_verts).
+        """
         row_sequence_ids = []
-
         for seg in segments:
             words = seg.events[seg.events.type == "Word"]
             if len(words) == 0:
                 row_sequence_ids.append(None)
                 continue
-            # Most recently started word = the sentence being spoken right now
             current_word = words.loc[words["start"].idxmax()]
             row_sequence_ids.append(int(current_word["sequence_id"]))
 
@@ -104,17 +65,29 @@ class ROIExtractor:
             [s if s is not None else -1 for s in row_sequence_ids]
         )
 
-        # Step 2: Average preds for each sequence_id (collapses the 3× repetition)
         unique_seqs = sorted(s for s in set(row_sequence_ids) if s >= 0)
-
         seq_preds = {}
         for seq_id in unique_seqs:
             mask = row_sequence_ids == seq_id
-            seq_preds[seq_id] = preds[mask].mean(axis=0)  # shape: (20484,)
+            seq_preds[seq_id] = preds[mask].mean(axis=0)
 
-        # Step 3: Stack into an array and score
-        seq_ids_arr    = np.array(unique_seqs)
-        preds_by_seq   = np.stack([seq_preds[s] for s in unique_seqs])  # (31, 20484)
+        seq_ids_arr  = np.array(unique_seqs)
+        preds_by_seq = np.stack([seq_preds[s] for s in unique_seqs])
+        return seq_ids_arr, preds_by_seq
+
+    def extract_segment_scores(self, preds, segments):
+        """Relative engagement scores (z-scored within session).
+
+        Good for within-run comparison: highlights which sentences are stronger
+        or weaker relative to the rest of the text. Not comparable across runs.
+        """
+        def zscore(x: np.ndarray) -> np.ndarray:
+            std = x.std()
+            if std < 1e-8:
+                return np.zeros_like(x)
+            return (x - x.mean()) / std
+
+        seq_ids_arr, preds_by_seq = self._aggregate_by_sequence(preds, segments)
 
         language_act = preds_by_seq[:, self.LANGUAGE].mean(axis=1)
         DAN_act      = preds_by_seq[:, self.DAN].mean(axis=1)
@@ -127,15 +100,58 @@ class ROIExtractor:
             - 0.25 * zscore(DMN_act)
             + 0.15 * zscore(ACC_act)
         )
-        # Sigmoid maps the z-score composite to (0, 100) on a fixed scale so
-        # scores are comparable across different texts (no per-call min/max stretch).
-        # raw_composite ≈ 0 → 50 (neutral); ±3 → ~95 / ~5 (strong engagement / disengagement).
+        # Sigmoid maps to (0, 100). raw_composite ≈ 0 → 50; ±3 → ~95 / ~5.
         engagement_score = 100.0 / (1.0 + np.exp(-raw_composite))
 
         return seq_ids_arr, engagement_score
 
-    def mean_score(self, engagement_scores: np.ndarray) -> float:
-        """Returns mean engagement_score across sequences."""
-        if len(engagement_scores) == 0:
+    def extract_absolute_score(self, preds, segments):
+        """Absolute engagement scores comparable across different runs.
+
+        Uses the ventral-anchored Task-Positive Network Index (TPNI):
+
+          baseline = mean ventral visual activation across the run
+                     (task-irrelevant region; corrects for run-level signal offset)
+
+          TPN = 0.40 * (language − baseline)
+              + 0.40 * (DAN − baseline)
+              + 0.20 * (ACC − baseline)
+
+          TNN = DMN − baseline
+
+          TPNI = (TPN − TNN) / (|TPN| + |TNN| + ε)   ∈ (−1, 1)
+          score = 50 × (1 + TPNI)                      ∈ (0, 100)
+
+        The ratio form makes scores scale-invariant: the same sentence always
+        receives the same score regardless of what other sentences appear in
+        the same batch. 50 = neutral; >50 = task-positive networks dominate
+        (engaged); <50 = DMN dominates (mind-wandering / disengagement).
+        """
+        seq_ids_arr, preds_by_seq = self._aggregate_by_sequence(preds, segments)
+
+        language_act = preds_by_seq[:, self.LANGUAGE].mean(axis=1)
+        DAN_act      = preds_by_seq[:, self.DAN].mean(axis=1)
+        DMN_act      = preds_by_seq[:, self.DMN].mean(axis=1)
+        ACC_act      = preds_by_seq[:, self.ACC].mean(axis=1)
+        ventral_act  = preds_by_seq[:, self.ventral].mean(axis=1)
+
+        # Ventral visual cortex: task-irrelevant during language/audio tasks.
+        # Its mean provides a run-level offset correction without contaminating
+        # the engagement signal.
+        baseline = float(ventral_act.mean())
+
+        TPN = (
+            0.40 * (language_act - baseline)
+            + 0.40 * (DAN_act    - baseline)
+            + 0.20 * (ACC_act    - baseline)
+        )
+        TNN = DMN_act - baseline
+
+        tpni = (TPN - TNN) / (np.abs(TPN) + np.abs(TNN) + 1e-8)
+        return seq_ids_arr, 50.0 * (1.0 + tpni)
+
+    def mean_score(self, scores: np.ndarray) -> float:
+        """Returns mean score across sequences. Works with both relative and absolute scores."""
+        if len(scores) == 0:
             return 0.0
-        return float(engagement_scores.mean())
+        return float(scores.mean())

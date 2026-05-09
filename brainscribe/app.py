@@ -34,11 +34,17 @@ def _build_seq_to_text(df) -> dict:
 
 
 def _score_only(text: str) -> tuple:
-    """Score text without refinement: preprocess -> TRIBE -> ROI extraction."""
+    """Score text without refinement: preprocess -> TRIBE -> ROI extraction.
+
+    Returns (seg_scores, absolute_mean) where seg_scores is the (seq_ids, scores, seq_to_text)
+    tuple for the timeline (relative, within-run) and absolute_mean is the cross-run
+    comparable summary score.
+    """
     preds, segments, df = tribe_runner.run_text(text)
     seq_ids, scores = roi_extractor.extract_segment_scores(preds, segments)
+    _, abs_scores   = roi_extractor.extract_absolute_score(preds, segments)
     seq_to_text = _build_seq_to_text(df)
-    return (seq_ids, scores, seq_to_text)
+    return (seq_ids, scores, seq_to_text), float(abs_scores.mean())
 
 
 def _log_rows(history: list[dict]) -> list[list]:
@@ -47,7 +53,7 @@ def _log_rows(history: list[dict]) -> list[list]:
 
 def handle_generate(topic: str, history: list[dict], step_count: int):
     yield (
-        gr.update(), gr.update(), gr.update(), history, step_count,
+        gr.update(), gr.update(), gr.update(), gr.update(), history, step_count,
         gr.update(), gr.update(),
         gr.update(value="⏳ Generating…", interactive=False),
     )
@@ -55,25 +61,25 @@ def handle_generate(topic: str, history: list[dict], step_count: int):
         if not topic.strip():
             raise gr.Error("Please enter a topic first.")
         text = generator.generate_from_topic(topic, params)
-        seg_scores = _score_only(text)
+        seg_scores, abs_mean = _score_only(text)
         history = history + [{"label": "Draft"}]
         timeline_fig = build_timeline_chart(seg_scores)
         log = _log_rows(history)
         yield (
-            text, timeline_fig, log, history, step_count,
+            text, f"{abs_mean:.1f}", timeline_fig, log, history, step_count,
             gr.update(visible=True), gr.update(visible=True),
             gr.update(value="Generate draft", interactive=True),
         )
     except gr.Error:
         yield (
-            gr.update(), gr.update(), gr.update(), history, step_count,
+            gr.update(), gr.update(), gr.update(), gr.update(), history, step_count,
             gr.update(), gr.update(),
             gr.update(value="Generate draft", interactive=True),
         )
         raise
     except Exception as e:
         yield (
-            gr.update(), gr.update(), gr.update(), history, step_count,
+            gr.update(), gr.update(), gr.update(), gr.update(), history, step_count,
             gr.update(), gr.update(),
             gr.update(value="Generate draft", interactive=True),
         )
@@ -82,32 +88,32 @@ def handle_generate(topic: str, history: list[dict], step_count: int):
 
 def handle_score(current_text: str, history: list[dict]):
     yield (
-        gr.update(), gr.update(), history,
+        gr.update(), gr.update(), gr.update(), history,
         gr.update(), gr.update(),
         gr.update(value="⏳ Scoring…", interactive=False),
     )
     try:
         if not current_text.strip():
             raise gr.Error("Working text is empty. Generate or paste some text first.")
-        seg_scores = _score_only(current_text)
+        seg_scores, abs_mean = _score_only(current_text)
         history = history + [{"label": "Score"}]
         timeline_fig = build_timeline_chart(seg_scores)
         log = _log_rows(history)
         yield (
-            timeline_fig, log, history,
+            f"{abs_mean:.1f}", timeline_fig, log, history,
             gr.update(visible=True), gr.update(visible=True),
             gr.update(value="Score", interactive=True),
         )
     except gr.Error:
         yield (
-            gr.update(), gr.update(), history,
+            gr.update(), gr.update(), gr.update(), history,
             gr.update(), gr.update(),
             gr.update(value="Score", interactive=True),
         )
         raise
     except Exception as e:
         yield (
-            gr.update(), gr.update(), history,
+            gr.update(), gr.update(), gr.update(), history,
             gr.update(), gr.update(),
             gr.update(value="Score", interactive=True),
         )
@@ -124,12 +130,12 @@ def handle_audio_score(audio_file):
             raise gr.Error("Please upload an audio file first.")
         path = audio_file if isinstance(audio_file, str) else audio_file.name
         preds, segments, df = tribe_runner.run_audio(path)
-        seq_ids, scores = roi_extractor.extract_segment_scores(preds, segments)
+        seq_ids, scores  = roi_extractor.extract_segment_scores(preds, segments)
+        _, abs_scores    = roi_extractor.extract_absolute_score(preds, segments)
         seq_to_text = _build_seq_to_text(df)
         fig = build_timeline_chart((seq_ids, scores, seq_to_text))
-        mean_score = float(scores.mean())
         yield (
-            fig, f"{mean_score:.1f}",
+            fig, f"{float(abs_scores.mean()):.1f}",
             gr.update(value="Evaluate", interactive=True),
         )
     except gr.Error:
@@ -160,7 +166,7 @@ def handle_refine(
     try:
         if not current_text.strip():
             raise gr.Error("Working text is empty. Generate or paste some text first.")
-        refined, seg_scores = optimizer.run_one_iteration(
+        refined, seg_scores, abs_mean = optimizer.run_one_iteration(
             current_text, params, tribe_runner, roi_extractor
         )
         step_count = step_count + 1
@@ -173,20 +179,20 @@ def handle_refine(
         timeline_fig = build_timeline_chart(seg_scores)
         log = _log_rows(history)
         yield (
-            refined, timeline_fig, log, history, step_count, False,
+            refined, f"{abs_mean:.1f}", timeline_fig, log, history, step_count, False,
             gr.update(visible=True), gr.update(visible=True),
             gr.update(value="✦ Refine", interactive=True),
         )
     except gr.Error:
         yield (
-            gr.update(), gr.update(), gr.update(), history, step_count, False,
+            gr.update(), gr.update(), gr.update(), gr.update(), history, step_count, False,
             gr.update(), gr.update(),
             gr.update(value="✦ Refine", interactive=True),
         )
         raise
     except Exception as e:
         yield (
-            gr.update(), gr.update(), gr.update(), history, step_count, False,
+            gr.update(), gr.update(), gr.update(), gr.update(), history, step_count, False,
             gr.update(), gr.update(),
             gr.update(value="✦ Refine", interactive=True),
         )
@@ -225,7 +231,14 @@ with gr.Blocks(title=config.APP_TITLE) as demo:
                 refine_btn = gr.Button("✦ Refine", variant="primary")
 
             with gr.Row(visible=False) as charts_row:
-                timeline_plot = gr.Plot(label="Engagement by segment")
+                with gr.Column(scale=1):
+                    text_mean = gr.Textbox(
+                        label="Mean engagement score (0–100, cross-run comparable)",
+                        interactive=False,
+                        placeholder="—",
+                    )
+                with gr.Column(scale=4):
+                    timeline_plot = gr.Plot(label="Engagement by segment (relative)")
 
             with gr.Row(visible=False) as log_row:
                 log_df = gr.Dataframe(
@@ -243,6 +256,7 @@ with gr.Blocks(title=config.APP_TITLE) as demo:
                 inputs=[topic_input, history_state, step_count_state],
                 outputs=[
                     working_text,
+                    text_mean,
                     timeline_plot,
                     log_df,
                     history_state,
@@ -263,6 +277,7 @@ with gr.Blocks(title=config.APP_TITLE) as demo:
                 fn=handle_score,
                 inputs=[working_text, history_state],
                 outputs=[
+                    text_mean,
                     timeline_plot,
                     log_df,
                     history_state,
@@ -277,6 +292,7 @@ with gr.Blocks(title=config.APP_TITLE) as demo:
                 inputs=[working_text, history_state, step_count_state, user_edited_state],
                 outputs=[
                     working_text,
+                    text_mean,
                     timeline_plot,
                     log_df,
                     history_state,
@@ -302,7 +318,7 @@ with gr.Blocks(title=config.APP_TITLE) as demo:
             with gr.Row() as audio_results_row:
                 with gr.Column(scale=1):
                     audio_mean = gr.Textbox(
-                        label="Mean engagement score (0–100)",
+                        label="Mean engagement score (0–100, cross-run comparable)",
                         interactive=False,
                         placeholder="—",
                     )
