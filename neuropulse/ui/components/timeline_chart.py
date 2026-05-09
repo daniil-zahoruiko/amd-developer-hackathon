@@ -1,10 +1,18 @@
 import plotly.graph_objects as go
 
 
-def build_timeline_chart(segment_scores: list[dict]) -> go.Figure:
-    """Bar chart showing engagement score per text segment."""
-    labels = [f"Seg {s['segment_idx'] + 1}" for s in segment_scores]
-    scores = [s["engagement_score"] for s in segment_scores]
+def build_timeline_chart(seq_scores: tuple) -> go.Figure:
+    """Bar chart showing engagement score per sequence."""
+    seq_ids, scores, seq_to_text = seq_scores
+
+    MAX_LABEL = 38
+    short_labels = []
+    full_texts = []
+    for sid in seq_ids:
+        full = seq_to_text.get(int(sid), f"Seq {sid}")
+        short = (full[:MAX_LABEL] + "…") if len(full) > MAX_LABEL else full
+        short_labels.append(short)
+        full_texts.append(full)
 
     colors = []
     for score in scores:
@@ -17,20 +25,21 @@ def build_timeline_chart(segment_scores: list[dict]) -> go.Figure:
 
     fig = go.Figure(
         go.Bar(
-            x=labels,
+            x=short_labels,
             y=scores,
             marker_color=colors,
-            hovertemplate="%{x}: %{y:.1f}<extra></extra>",
+            customdata=full_texts,
+            hovertemplate="%{customdata}<br><b>Score: %{y:.1f}</b><extra></extra>",
         )
     )
     fig.update_layout(
-        title="Engagement by segment",
+        title="Engagement by sentence",
         yaxis=dict(range=[0, 100], showgrid=True, gridcolor="rgba(255,255,255,0.1)"),
-        xaxis=dict(showgrid=False),
+        xaxis=dict(showgrid=False, tickangle=-35),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=40, r=20, t=40, b=40),
-        font=dict(size=12),
+        margin=dict(l=40, r=20, t=40, b=160),
+        font=dict(size=11),
     )
     return fig
 

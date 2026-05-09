@@ -11,7 +11,7 @@ class TextGenerator:
 
         self.model = AutoModelForCausalLM.from_pretrained(
             self.MODEL_ID,
-            dtype=torch.bfloat8,
+            dtype=torch.bfloat16,
             device_map="auto"
         )
 
@@ -54,14 +54,26 @@ class TextGenerator:
         content = self.tokenizer.decode(output_ids, skip_special_tokens=True)
         return content
 
-    def refine(self, text: str, params: TextParams, instruction: str) -> str:
-        """
-        TODO: Call the LLM with `text` and `instruction` (a plain-English
-        description of what to improve, produced by the optimizer) to produce
-        a refined version that preserves meaning but improves neural engagement.
-        The system prompt should instruct the model to keep the same topic and
-        approximate length while applying the changes described in `instruction`.
-        Returns the refined text string.
-        """
-        # TODO: replace with real LLM call
-        return f"{text}\n\n[MOCK REFINEMENT — instruction: {instruction}]"
+    def refine(self, text: str, params: TextParams, instruction: str, system_prompt: str = "") -> str:
+        user_content = f"{instruction}\n\nFull original text:\n\n{text}"
+        messages = [
+            {
+                "role": "system",
+                "content": system_prompt or "You are a precise text editor. Output ONLY the final text.",
+            },
+            {"role": "user", "content": user_content},
+        ]
+        text_input = self.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+            enable_thinking=False,
+        )
+        model_inputs = self.tokenizer([text_input], return_tensors="pt").to(self.model.device)
+        with torch.no_grad():
+            generated_ids = self.model.generate(
+                **model_inputs,
+                max_new_tokens=1500,
+            )
+        output_ids = generated_ids[0][len(model_inputs.input_ids[0]):].tolist()
+        return self.tokenizer.decode(output_ids, skip_special_tokens=True)
