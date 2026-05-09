@@ -38,6 +38,39 @@ class ROIExtractor:
             'G_and_S_cingul-Mid-Ant',
             'G_and_S_cingul-Ant',
         ])
+        # Ventral visual stream: fusiform, lingual, parahippocampal, inferior temporal, inferior occipital
+        self.ventral = verts([
+            'G_oc-temp_lat-fusifor',
+            'G_oc-temp_med-Lingual',
+            'G_oc-temp_med-Parahip',
+            'G_temporal_inf',
+            'G_and_S_occipital_inf',
+        ])
+
+    def extract_video_scores(self, preds: np.ndarray) -> np.ndarray:
+        """Score video predictions (n_timesteps, 20484) → engagement per second."""
+        def zscore(x: np.ndarray) -> np.ndarray:
+            std = x.std()
+            if std < 1e-8:
+                return np.zeros_like(x)
+            return (x - x.mean()) / std
+
+        rois = {
+            "ventral":  preds[:, self.ventral].mean(axis=1),
+            "language": preds[:, self.LANGUAGE].mean(axis=1),
+            "DAN":      preds[:, self.DAN].mean(axis=1),
+            "DMN":      preds[:, self.DMN].mean(axis=1),
+            "ACC":      preds[:, self.ACC].mean(axis=1),
+        }
+
+        raw_composite = (
+              0.25 * zscore(rois["ventral"])
+            + 0.20 * zscore(rois["language"])
+            + 0.25 * zscore(rois["DAN"])
+            - 0.20 * zscore(rois["DMN"])
+            + 0.10 * zscore(rois["ACC"])
+        )
+        return 100.0 / (1.0 + np.exp(-raw_composite))
 
     def extract_segment_scores(self, preds, segments):
         def zscore(x: np.ndarray) -> np.ndarray:

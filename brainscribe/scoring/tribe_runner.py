@@ -32,6 +32,11 @@ class TRIBERunner:
         finally:
             Path(tmp_path).unlink(missing_ok=True)
 
+    def run_video(self, video_path: str):
+        df = self.model.get_events_dataframe(video_path=video_path)
+        preds, segments = self.model.predict(events=df)
+        return preds, segments
+
     def run(self, preprocessed: dict) -> np.ndarray:
         """
         TODO: Run TRIBE v2 forward pass.
