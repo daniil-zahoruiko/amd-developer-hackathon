@@ -120,6 +120,7 @@ weasel==1.0.0
 wrapt==2.1.2
 x-transformers==1.27.20
 accelerate
+diffusers
 nilearn
 gradio>=4.0.0
 plotly

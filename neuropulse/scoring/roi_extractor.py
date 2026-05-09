@@ -23,7 +23,7 @@ class ROIExtractor:
         ])
         self.LANGUAGE = verts([
             'G_front_inf-Opercular', 'G_front_inf-Triangul',
-            'G_temp_sup-G_T_transv', 'G_temp_sup-Lateral', 
+            'G_temp_sup-G_T_transv', 'G_temp_sup-Lateral',
             'G_temp_sup-Plan_tempo', 'S_temporal_sup'
         ], hemispheres='left')   # language is left-lateralized
         self.DMN = verts([
@@ -38,6 +38,20 @@ class ROIExtractor:
             'G_and_S_cingul-Mid-Ant',
             'G_and_S_cingul-Ant',
         ])
+        # Ventral visual stream — fusiform, lingual, parahippocampal, inferior occipital
+        self.VENTRAL = verts([
+            'G_oc-temp_lat-fusifor',
+            'G_oc-temp_med-Lingual',
+            'G_oc-temp_med-Parahip',
+            'G_and_S_occipital_inf',
+        ])
+
+        # Underscore-suffixed aliases used by the video pipeline's roi_indices dict
+        self.VENTRAL_STREAM_VOXELS = self.VENTRAL
+        self.LANGUAGE_VOXELS       = self.LANGUAGE
+        self.DAN_VOXELS            = self.DAN
+        self.DMN_VOXELS            = self.DMN
+        self.ACC_VOXELS            = self.ACC
 
     def extract_segment_scores(self, preds, segments):
         def zscore(x: np.ndarray) -> np.ndarray:
