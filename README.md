@@ -17,7 +17,7 @@
 
 ---
 
-BrainSkribbl is a Gradio application built for the AMD Developer Hackathon 2026. It uses [TRIBE v2](https://github.com/facebookresearch/tribev2) — a deep multimodal brain encoding model from Meta — to predict fMRI brain responses to text, audio, and video. Those neural engagement scores drive an iterative optimizer that rewrites content to maximize cognitive engagement, retention, and listener attention.
+BrainSkribbl is a Gradio application built for the AMD Developer Hackathon 2026. It uses [TRIBE v2](https://github.com/facebookresearch/tribev2) - a deep multimodal brain encoding model from Meta - to predict fMRI brain responses to text, audio, and video. Those neural engagement scores drive an iterative optimizer that rewrites content to maximize cognitive engagement, retention, and listener attention.
 
 The platform targets the growing educational podcast and long-form learning market, where creators, educators, and media companies need better ways to measure whether audiences stay mentally engaged throughout an episode. Traditional analytics like watch time or click-through rate only capture external behavior; BrainSkribbl estimates the audience's internal cognitive response directly from AI-predicted brain activity.
 
@@ -32,7 +32,7 @@ Paste a topic or pre-made script. BrainSkribbl generates an educational podcast-
 
 BrainSkribbl also supports **audio evaluation**: analyze completed recordings for predicted listener engagement, identify flat segments, and compare alternative edits using the same neural scoring pipeline.
 
-The fine-tuning pipeline (`finetune/`) trains a LoRA adapter on top of Qwen2.5-7B-Instruct using TRIBE score deltas as sample weights — pairs where the brain model confirmed the refinement helped are weighted more heavily during training.
+The fine-tuning pipeline (`finetune/`) trains a LoRA adapter on top of Qwen2.5-7B-Instruct using TRIBE score deltas as sample weights - pairs where the brain model confirmed the refinement helped are weighted more heavily during training.
 
 ---
 
@@ -91,11 +91,11 @@ Open `http://localhost:7860` in your browser.
 
 ## Hugging Face Space
 
-A static landing page is hosted as a Hugging Face Space (`hf-space/`) — a plain HTML page with no SDK runtime — that links out to the live Gradio app. The Gradio app runs on a self-hosted AMD GPU exposed via a Cloudflare Tunnel and is only active during demo sessions; the app link may be offline at other times.
+A static landing page is hosted as a Hugging Face Space (`hf-space/`) - a plain HTML page with no SDK runtime - that links out to the live Gradio app. The Gradio app runs on a self-hosted AMD GPU exposed via a Cloudflare Tunnel and is only active during demo sessions; the app link may be offline at other times.
 
 ---
 
 ## Acknowledgements
 
-- **[TRIBE v2](https://github.com/facebookresearch/tribev2)** by Meta — the brain encoding model that powers all scoring. TRIBE v2 predicts fMRI responses to naturalistic stimuli (text, audio, video) using a unified multimodal Transformer architecture.
-- **[AMD](https://www.amd.com)** — this project was developed on AMD ROCm GPUs. PyTorch's ROCm backend is a drop-in replacement (`DEVICE=cuda` works unchanged), and `torch.compile` with the `inductor` backend accelerates both inference and fine-tuning.
+- **[TRIBE v2](https://github.com/facebookresearch/tribev2)** by Meta - the brain encoding model that powers all scoring. TRIBE v2 predicts fMRI responses to naturalistic stimuli (text, audio, video) using a unified multimodal Transformer architecture.
+- **[AMD](https://www.amd.com)** - this project was developed on AMD ROCm GPUs. PyTorch's ROCm backend is a drop-in replacement (`DEVICE=cuda` works unchanged), and `torch.compile` with the `inductor` backend accelerates both inference and fine-tuning.
