@@ -4,7 +4,7 @@ import torch
 
 
 class TextGenerator:
-    MODEL_ID = "Qwen/Qwen3-4B-Instruct-2507"
+    MODEL_ID = "Qwen/Qwen2.5-7B-Instruct"
 
     def __init__(self):
         self.tokenizer = AutoTokenizer.from_pretrained(self.MODEL_ID)
@@ -12,22 +12,28 @@ class TextGenerator:
         self.model = AutoModelForCausalLM.from_pretrained(
             self.MODEL_ID,
             dtype=torch.bfloat16,
-            device_map="auto"
+            device_map="auto",
+            attn_implementation="sdpa"
         )
+        self.model = torch.compile(self.model, backend="inductor")
 
     def generate_from_topic(self, topic: str, params: TextParams) -> str:
         prompt = (
-            f"Write 2-4 paragraphs about: {topic}\n\n"
-            "Constraints:\n"
-            f"- Sentence length: avg {params.sentence_length} words (6–24 range)\n"
-            f"- Vocabulary level: grade {params.vocab_complexity}\n"
-            f"- Tone: {params.emotional_tone} (neutral / warm / urgent / playful)\n"
-            f"- Format: {params.structure} (prose / bullets / numbered)\n\n"
-            "Rules:\n"
-            "- Keep writing natural and coherent\n"
-            "- Do not explain or mention these rules\n"
-            "- Follow tone and structure strictly\n"
-            "- Output ONLY the final text\n"
+            f"Write an engaging educational podcast script about: {topic}\n\n"
+            "Requirements:\n"
+            f"- Total length: approximately 700 words\n"
+            f"- Use 4 well-developed paragraphs\n"
+            f"- Each paragraph should be moderately detailed (roughly 120-220 words)\n"
+            f"- Average sentence length: {params.sentence_length} words\n"
+            f"- Tone: {params.emotional_tone}\n"
+            f"- Complexity level: {params.vocab_complexity}\n"
+            "- Focus on clarity, flow, and listener engagement\n"
+            "- Include interesting explanations, examples, or analogies where appropriate\n"
+            "- Avoid overly short paragraphs or fragmented ideas\n"
+            "- Avoid excessive repetition or unnecessary filler\n"
+            "- Write in a natural spoken style suitable for narration\n"
+            "- Do not include section titles, bullet points, stage directions, or speaker labels\n"
+            "- Output only the podcast narration text\n"
         )
         messages = [
             {

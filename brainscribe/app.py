@@ -159,7 +159,7 @@ def handle_refine(
     user_edited: bool,
 ):
     yield (
-        gr.update(), gr.update(), gr.update(), history, step_count, False,
+        gr.update(), gr.update(), gr.update(), gr.update(), history, step_count, False,
         gr.update(), gr.update(),
         gr.update(value="⏳ Refining…", interactive=False),
     )
