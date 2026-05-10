@@ -99,6 +99,7 @@ A static landing page is hosted as a Hugging Face Space (`hf-space/`) - a plain 
 
 - **[TRIBE v2](https://github.com/facebookresearch/tribev2)** by Meta - the brain encoding model that powers all scoring. TRIBE v2 predicts fMRI responses to naturalistic stimuli (text, audio, video) using a unified multimodal Transformer architecture.
 - **[AMD](https://www.amd.com)** - this project was developed on AMD ROCm GPUs. PyTorch's ROCm backend is a drop-in replacement (`DEVICE=cuda` works unchanged), and `torch.compile` with the `inductor` backend accelerates both inference and fine-tuning.
+- Parts of this project were developed with coding assistance from Claude Code by Anthropic and ChatGPT by OpenAI, used for implementation support, debugging, refactoring, and development workflow acceleration.
 
 ## License & Attribution
 
