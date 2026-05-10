@@ -1,0 +1,32 @@
+[
+  {
+    "topic": "why aerobic exercise has such a powerful effect on mood",
+    "base_score": 75.09288024902344,
+    "ft_score": 78.02497100830078,
+    "delta": 2.9320907592773438
+  },
+  {
+    "topic": "the role of dopamine in motivation and reward learning",
+    "base_score": 56.09587860107422,
+    "ft_score": 58.356021881103516,
+    "delta": 2.260143280029297
+  },
+  {
+    "topic": "how transformer-based language models predict the next word",
+    "base_score": 66.74916076660156,
+    "ft_score": 62.67780685424805,
+    "delta": -4.071353912353516
+  },
+  {
+    "topic": "why biodiversity matters for ecosystem resilience",
+    "base_score": 65.10577392578125,
+    "ft_score": 81.86945343017578,
+    "delta": 16.76367950439453
+  },
+  {
+    "topic": "the psychology of habit formation and behaviour change",
+    "base_score": 62.43375778198242,
+    "ft_score": 71.92224884033203,
+    "delta": 9.48849105834961
+  }
+]
