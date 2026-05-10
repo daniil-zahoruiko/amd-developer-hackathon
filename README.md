@@ -1,5 +1,14 @@
 # BrainSkribbl
 
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-ROCm-EE4C2C?style=flat&logo=pytorch&logoColor=white)
+![AMD ROCm](https://img.shields.io/badge/AMD-ROCm-ED1C24?style=flat&logo=amd&logoColor=white)
+![Gradio](https://img.shields.io/badge/Gradio-UI-F97316?style=flat&logo=gradio&logoColor=white)
+![Hugging Face](https://img.shields.io/badge/Hugging%20Face-Transformers-FFD21E?style=flat&logo=huggingface&logoColor=black)
+![Qwen](https://img.shields.io/badge/Qwen2.5--7B-Instruct-6366F1?style=flat)
+![LoRA](https://img.shields.io/badge/Fine--tuning-LoRA-10B981?style=flat)
+![TRIBE v2](https://img.shields.io/badge/Brain%20Model-TRIBE%20v2-0EA5E9?style=flat)
+
 **Refine educational podcasts, scripts, and audio using brain simulation as a feedback signal.**
 
 BrainSkribbl is a Gradio application built for the AMD Developer Hackathon 2026. It uses [TRIBE v2](https://github.com/facebookresearch/tribev2) — a deep multimodal brain encoding model from Meta — to predict fMRI brain responses to text, audio, and video. Those neural engagement scores drive an iterative optimizer that rewrites content to maximize cognitive engagement, retention, and listener attention.
