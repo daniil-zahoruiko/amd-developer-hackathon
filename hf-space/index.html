@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BrainSkribbl</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0b0d14;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 30%, rgba(99,102,241,.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 80% 70%, rgba(168,85,247,.10) 0%, transparent 70%);
+    }
+
+    .card {
+      position: relative;
+      max-width: 680px;
+      width: 100%;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 20px;
+      padding: 3rem 3.5rem;
+      text-align: center;
+      backdrop-filter: blur(12px);
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #a78bfa;
+      background: rgba(167,139,250,.12);
+      border: 1px solid rgba(167,139,250,.25);
+      border-radius: 999px;
+      padding: .3rem .9rem;
+      margin-bottom: 1.6rem;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      background: linear-gradient(135deg, #e0e7ff 0%, #a78bfa 50%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: .8rem;
+      line-height: 1.1;
+    }
+
+    .tagline {
+      font-size: 1.1rem;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 2.4rem;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .features {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 2.5rem;
+    }
+
+    .feature {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 10px;
+      padding: .6rem 1.1rem;
+      font-size: .85rem;
+      color: #cbd5e1;
+    }
+
+    .feature span { margin-right: .4rem; }
+
+    .buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .75rem 1.6rem;
+      border-radius: 10px;
+      font-size: .95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity .15s, transform .15s;
+      cursor: pointer;
+    }
+
+    .btn:hover { opacity: .85; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      border: none;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #e2e8f0;
+      border: 1px solid rgba(255,255,255,.15);
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      font-size: .82rem;
+      color: #64748b;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #64748b;
+      transition: background .3s;
+    }
+
+    .dot.online  { background: #22c55e; box-shadow: 0 0 6px #22c55e88; }
+    .dot.offline { background: #f87171; }
+
+    #status-text { transition: color .3s; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,.06);
+      margin: 2rem 0;
+    }
+
+    .footer {
+      font-size: .78rem;
+      color: #475569;
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 2rem 1.5rem; }
+      h1 { font-size: 2.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+
+  <div class="card">
+    <div class="badge">AMD Hackathon 2025</div>
+
+    <h1>BrainSkribbl</h1>
+
+    <p class="tagline">
+      Refine any text using TRIBE v2 brain simulation as a feedback signal.
+      Score engagement, find weak segments, and let the optimizer improve your writing.
+    </p>
+
+    <div class="features">
+      <div class="feature"><span>🧠</span>TRIBE v2 brain model</div>
+      <div class="feature"><span>✦</span>AI-assisted refinement</div>
+      <div class="feature"><span>🎙</span>Audio evaluation</div>
+      <div class="feature"><span>⚡</span>AMD ROCm GPU</div>
+    </div>
+
+    <div class="buttons">
+      <a id="app-btn" href="https://southampton-complimentary-richardson-labeled.trycloudflare.com" target="_blank" rel="noopener" class="btn btn-primary">
+        🚀 Launch App
+      </a>
+      <a href="https://github.com/daniil-zahoruiko/amd-developer-hackathon" target="_blank" rel="noopener" class="btn btn-secondary">
+        <!-- github icon -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
+    </div>
+
+    <div class="status-row">
+      <div class="dot" id="status-dot"></div>
+      <span id="status-text">Checking app status…</span>
+    </div>
+
+    <hr class="divider" />
+
+    <p class="footer">
+      App runs on a self-hosted AMD GPU via Cloudflare Tunnel &mdash; may be offline outside demo sessions.
+    </p>
+  </div>
+
+  <script>
+    const APP_URL = "https://southampton-complimentary-richardson-labeled.trycloudflare.com";
+    const dot  = document.getElementById("status-dot");
+    const text = document.getElementById("status-text");
+
+    async function checkStatus() {
+      try {
+        const res = await fetch(APP_URL + "/info", { method: "GET", mode: "no-cors", cache: "no-store" });
+        // no-cors returns opaque — if we get here the server responded
+        dot.className  = "dot online";
+        text.textContent = "App is online";
+        text.style.color = "#22c55e";
+      } catch {
+        dot.className  = "dot offline";
+        text.textContent = "App is currently offline";
+        text.style.color = "#f87171";
+      }
+    }
+
+    checkStatus();
+    setInterval(checkStatus, 30000);
+  </script>
+</body>
+</html>
