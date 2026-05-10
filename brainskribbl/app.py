@@ -3,6 +3,8 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 import gradio as gr
+from starlette.datastructures import MutableHeaders
+from starlette.middleware import Middleware
 
 from config import Config
 from modalities.text.params import TextParams
@@ -332,5 +334,28 @@ with gr.Blocks(title=config.APP_TITLE) as demo:
             )
 
 
+class _NoBufferMiddleware:
+    """Disable proxy buffering so Cloudflare tunnels don't swallow SSE chunks."""
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def patched_send(message):
+            if message["type"] == "http.response.start":
+                MutableHeaders(scope=message).append("X-Accel-Buffering", "no")
+            await send(message)
+
+        await self.app(scope, receive, patched_send)
+
+
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860, share=False)
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False,
+        app_kwargs={"middleware": [Middleware(_NoBufferMiddleware)]},
+    )
