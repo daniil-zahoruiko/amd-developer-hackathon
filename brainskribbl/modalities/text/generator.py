@@ -1,20 +1,26 @@
 from modalities.text.params import TextParams
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from peft import PeftModel
 import torch
+import os
+
+_CHECKPOINT = os.path.join(os.path.dirname(__file__), "../../../finetune/checkpoints/final")
+_ADAPTER_PATH = os.path.abspath(_CHECKPOINT)
 
 
 class TextGenerator:
     MODEL_ID = "Qwen/Qwen2.5-7B-Instruct"
 
     def __init__(self):
-        self.tokenizer = AutoTokenizer.from_pretrained(self.MODEL_ID)
+        self.tokenizer = AutoTokenizer.from_pretrained(_ADAPTER_PATH)
 
-        self.model = AutoModelForCausalLM.from_pretrained(
+        base = AutoModelForCausalLM.from_pretrained(
             self.MODEL_ID,
             dtype=torch.bfloat16,
             device_map="auto",
             attn_implementation="sdpa"
         )
+        self.model = PeftModel.from_pretrained(base, _ADAPTER_PATH)
         self.model = torch.compile(self.model, backend="inductor")
 
     def generate_from_topic(self, topic: str, params: TextParams) -> str:
