@@ -40,7 +40,7 @@ def build_timeline_chart(seq_scores: tuple) -> go.Figure:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=40, r=20, t=40, b=160),
-        font=dict(size=11),
+        font=dict(size=11, color="#E0E0E0"),
     )
     return fig
 
@@ -102,7 +102,7 @@ def build_video_chart(scores: np.ndarray, segments=None) -> go.Figure:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=40, r=20, t=40, b=60),
-        font=dict(size=11),
+        font=dict(size=11, color="#E0E0E0"),
     )
     return fig
 
@@ -123,7 +123,7 @@ def build_history_chart(history: list[dict]) -> go.Figure:
                         text=f"{scores[idx]:.1f}",
                         showarrow=False,
                         yshift=12,
-                        font=dict(size=11),
+                        font=dict(size=11, color="#E0E0E0"),
                     )
                 )
 
@@ -145,6 +145,6 @@ def build_history_chart(history: list[dict]) -> go.Figure:
         plot_bgcolor="rgba(0,0,0,0)",
         annotations=annotations,
         margin=dict(l=40, r=20, t=40, b=60),
-        font=dict(size=12),
+        font=dict(size=12, color="#E0E0E0"),
     )
     return fig
